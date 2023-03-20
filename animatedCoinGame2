@@ -1,0 +1,115 @@
+import pygame
+import sys
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 800, 600
+
+# Colors
+LIGHT_BROWN = (210, 180, 140)
+
+# Create the display
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('Animated Game with Obstacles and Lives')
+
+# Load character image
+character_image = pygame.image.load("character.png")
+
+# Load coin image
+coin_image = pygame.image.load("coin.png")
+
+# Load obstacle image
+obstacle_image = pygame.image.load("obstacle.png")
+
+# Character position
+character_x, character_y = WIDTH // 2, HEIGHT // 2
+character_speed = 5
+
+# Coin position
+coin_x, coin_y = random.randint(0, WIDTH - 32), random.randint(0, HEIGHT - 32)
+
+# Obstacles
+num_obstacles = 5
+obstacles = [((random.randint(0, WIDTH - 32), random.randint(0, HEIGHT - 32))) for _ in range(num_obstacles)]
+
+# Initialize score and lives
+score = 0
+lives = 3
+
+# Set up font for displaying score and lives
+font = pygame.font.Font(None, 36)
+
+def display_score_and_lives():
+    score_text = font.render(f"Score: {score}  Lives: {lives}", 1, (0, 0, 0))
+    screen.blit(score_text, (10, 10))
+
+def collides(a_x, a_y, b_x, b_y):
+    return (b_x <= a_x <= b_x + 32 or b_x <= a_x + 32 <= b_x + 32) and (b_y <= a_y <= b_y + 32 or b_y <= a_y + 32 <= b_y + 32)
+
+# Main game loop
+running = True
+while running:
+    # Event handling
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Get pressed keys
+    keys = pygame.key.get_pressed()
+
+    # Update character position based on pressed keys
+    if keys[pygame.K_LEFT]:
+        character_x -= character_speed
+    if keys[pygame.K_RIGHT]:
+        character_x += character_speed
+    if keys[pygame.K_UP]:
+        character_y -= character_speed
+    if keys[pygame.K_DOWN]:
+        character_y += character_speed
+
+    # Keep character inside the screen
+    character_x = max(0, min(WIDTH - 32, character_x))
+    character_y = max(0, min(HEIGHT - 32, character_y))
+
+    # Check for coin collision
+    if collides(character_x, character_y, coin_x, coin_y):
+        score += 1
+        coin_x, coin_y = random.randint(0, WIDTH - 32), random.randint(0, HEIGHT - 32)
+
+    # Check for obstacle collision
+    for obs_x, obs_y in obstacles:
+        if collides(character_x, character_y, obs_x, obs_y):
+            lives -= 1
+            character_x, character_y = WIDTH // 2, HEIGHT // 2
+            if lives <= 0:
+                running = False
+                break
+
+    # Clear the screen
+    screen.fill(LIGHT_BROWN)
+
+    # Draw the character
+    screen.blit(character_image, (character_x, character_y))
+
+    # Draw the coin
+    screen.blit(coin_image, (coin_x, coin_y))
+
+# Draw the obstacles
+for obs_x, obs_y in obstacles:
+    screen.blit(obstacle_image, (obs_x, obs_y))
+
+# Display score and lives
+display_score_and_lives()
+
+# Update the display
+pygame.display.update()
+
+# Cap the frame rate
+pygame.time.Clock().tick(60)
+
+# Quit the game
+pygame.quit()
+sys.exit()
